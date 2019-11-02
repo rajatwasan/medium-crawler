@@ -10,7 +10,9 @@ export function init(config: IDataConfiguration): IDatabase {
   (<any>Mongoose).Promise = Promise;
   let options = {
     user: config.username,
-    pass: config.password
+    pass: config.password,
+    useNewUrlParser: true,
+    useUnifiedTopology: true
   };
   Mongoose.connect(config.connectionString, options);
 
