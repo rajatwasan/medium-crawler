@@ -22,13 +22,21 @@ export default class UrlController {
     let collection = await this.database.urlModel.find();
 
     let url = 'https://medium.com/';
-    let array = [];
-
-    let html = await Request.get(url);
-    let $ = cheerio.load(html.toString());
     try {
+      await this.Crawler(url);
+      return h.response(collection).code(201);
+    } catch (error) {
+      return Boom.badImplementation(error);
+    }
+  }
+  async Crawler(url) {
+    try {
+      let html = await Request.get(url);
+      let $ = cheerio.load(html.toString());
+
       let urls = $("a");
-      // console.log(urls[0]);
+      let array = [];
+
       Object.keys(urls).forEach(async (item) => {
         if (urls[item].type === 'tag') {
           // console.log(urls[item]);
@@ -36,50 +44,46 @@ export default class UrlController {
 
           if (href && array.indexOf(href) === -1) {
             let url = href.split('?')[0];
-            let queryData = Object.keys(URL.parse(href, true)['query']);
-            // const params = new URL.URLSearchParams(href.split('?')[1]);
-            // console.log(params);
-            // if (queryData) {
-            //   console.log(queryData);
-            // }
-            array.push({ url, params: queryData });
+            let params = Object.keys(URL.parse(href, true)['query']);
+            let urlCollection = await this.database.urlModel.findOne({url});
+            if (urlCollection) {
+              params.forEach(param => {
+                if (urlCollection[index].params.indexOf(param) === -1) {
+                  urlCollection[index].refCount += 1;
+                  urlCollection[index].params.push(param);
+                }
+              });
+            } else {
+              // await this.Crawler(url); // add max socket to avoid blocking
+              array.push({ url, params });
+            }
           }
         }
       });
-      let arrayDocument:IUrl[] = [],
-        uniqueUrl = collection.map(x => x.url),
+      let arrayDocument: IUrl[] = [],
+        uniqueUrl = [], //collection.map(x => x.url),
         index;
-
       for (let i = 0; i < array.length; i++) {
         index = uniqueUrl.indexOf(array[i].url);
         if (index !== -1) {
-          collection[index].refCount += 1;
           array[i].params.forEach(param => {
-            if (collection[index].params.indexOf(param) === -1) {
-              collection[index].params.push(param);
+            if (arrayDocument[index].params.indexOf(param) === -1) {
+              arrayDocument[index].refCount += 1;
+              arrayDocument[index].params.push(param);
             }
           });
-          collection[index].save();
         } else {
           uniqueUrl.push(array[i].url);
           array[i].refCount = 1;
           arrayDocument.push(array[i]);
         }
       }
-      // collection.save();
-      if (arrayDocument.length > 0) {
-        arrayDocument = await this.database.urlModel.create(arrayDocument);
-        arrayDocument.forEach(element => {
-          collection.push(element);
-        });
-        return h.response(collection).code(201);
-      }
-      return h.response(collection).code(201);
+      return await this.database.urlModel.create(arrayDocument);
     } catch (error) {
+      console.log("Error:", error);
       return Boom.badImplementation(error);
     }
   }
-
   public async getData(request: IRequest, h: Hapi.ResponseToolkit) {
     let urls = await this.database.urlModel.find();
     if (!urls) {
