@@ -1,7 +1,11 @@
 import * as Hapi from "hapi";
 import * as Boom from "boom";
 import { IServerConfigurations } from "./configurations";
+import * as crawler from "./api/crawler";
 import { IDatabase } from "./database";
+import * as http from 'http';
+
+http.globalAgent.maxSockets = 5;
 
 export async function init(
   configs: IServerConfigurations,
@@ -24,7 +28,7 @@ export async function init(
     }
 
     console.log("Register Routes");
-    // add routes
+    crawler.init(server, configs, database);
     console.log("Routes registered sucessfully.");
 
     return server;
