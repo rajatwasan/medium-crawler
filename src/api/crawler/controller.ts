@@ -32,9 +32,9 @@ export default class UrlController {
   public async crawl(request: IRequest, h: Hapi.ResponseToolkit) {
     let collection = await this.database.urlModel.find();
     let url = 'https://medium.com/';
-    let url1 = 'https://medium.com/topic/technology';
+    // let url1 = 'https://medium.com/topic/technology';
     try {
-      await this.Crawler(url1);
+      await this.Crawler(url);
       return h.response(collection).code(201);
     } catch (error) {
       return Boom.badImplementation(error);
