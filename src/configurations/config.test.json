@@ -1,0 +1,13 @@
+{
+  "database": {
+    "connectionString": "mongodb://localhost:27017/taskdb-test",
+    "username": "admin",
+    "password": "rPWqas"
+  },
+  "server": {
+    "port": 5000,
+    "jwtSecret": "random-secret-password",
+    "jwtExpiration": "1h",
+    "routePrefix": ""
+  }
+}

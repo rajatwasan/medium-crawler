@@ -37,3 +37,5 @@ build
 #Ignore typings
 typings
 
+#Ignore extra
+extras.ts
