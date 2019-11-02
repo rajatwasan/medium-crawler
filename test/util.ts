@@ -1,0 +1,1 @@
+import * as Database from "../src/database";
