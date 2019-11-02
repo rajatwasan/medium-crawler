@@ -1,7 +1,9 @@
 import * as Mongoose from "mongoose";
 import { IDataConfiguration } from "./configurations";
+import { IUrl, UrlModel } from "./api/crawler/model";
 
 export interface IDatabase {
+  urlModel: Mongoose.Model<IUrl>;
 }
 
 export function init(config: IDataConfiguration): IDatabase {
@@ -23,5 +25,6 @@ export function init(config: IDataConfiguration): IDatabase {
   });
 
   return {
+    urlModel: UrlModel
   };
 }
