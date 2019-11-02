@@ -6,13 +6,24 @@ import { IServerConfigurations } from "../../configurations";
 import { IRequest } from "../../interfaces/request";
 import * as Request from "request-promise";
 import * as cheerio from "cheerio";
-// const request = require('request-promise');
-// const cheerio = require('cheerio');
-import { performance } from "perf_hooks";
+
+import * as Http from 'http';
+import * as Https from 'https';
+const Wreck = require('wreck');
+
+const wreck = Wreck.defaults({
+  agents: {
+      https: new Https.Agent({ maxSockets: 5 }),
+      http: new Http.Agent({ maxSockets: 5 }),
+      httpsAllowUnauthorized: new Https.Agent({ maxSockets: 5, rejectUnauthorized: false })
+  }
+});
+// import { performance } from "perf_hooks";
 import * as URL from 'url';
 export default class UrlController {
   private database: IDatabase;
   private configs: IServerConfigurations;
+  queue = [];
 
   constructor(configs: IServerConfigurations, database: IDatabase) {
     this.database = database;
@@ -20,18 +31,19 @@ export default class UrlController {
   }
   public async crawl(request: IRequest, h: Hapi.ResponseToolkit) {
     let collection = await this.database.urlModel.find();
-
     let url = 'https://medium.com/';
+    let url1 = 'https://medium.com/topic/technology';
     try {
-      await this.Crawler(url);
+      await this.Crawler(url1);
       return h.response(collection).code(201);
     } catch (error) {
       return Boom.badImplementation(error);
     }
   }
   async Crawler(url) {
+    console.log("Crawler started for url:", url);
     try {
-      let html = await Request.get(url);
+      let html = await wreck.get(url);
       let $ = cheerio.load(html.toString());
 
       let urls = $("a");
@@ -54,6 +66,7 @@ export default class UrlController {
                 }
               });
             } else {
+              this.queue.push(url);
               // await this.Crawler(url); // add max socket to avoid blocking
               array.push({ url, params });
             }

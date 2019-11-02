@@ -6,6 +6,8 @@ import { IDatabase } from "./database";
 import * as http from 'http';
 
 http.globalAgent.maxSockets = 5;
+export const agent = new http.Agent({ keepAlive: true, maxSockets: 5 });
+
 
 export async function init(
   configs: IServerConfigurations,
